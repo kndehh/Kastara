@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env*
+!.env.example
+playwright-report/
+test-results/
+*.tsbuildinfo
+.hermes
+docs
+hermes.md
+public/api
