@@ -60,7 +60,7 @@ it("shows an empty state when nothing matches", async () => {
   });
 });
 
-it("opens a card dialog as a preview, then reveals the full detail", async () => {
+it("opens a card dialog straight to the full detail", async () => {
   const user = userEvent.setup();
   await renderGallery();
 
@@ -70,16 +70,12 @@ it("opens a card dialog as a preview, then reveals the full detail", async () =>
   expect(dialog).toHaveTextContent("Beta uji");
   expect(dialog).toHaveTextContent("Epik");
   expect(dialog).toHaveTextContent("TEST-02");
-  // Preview first: rules stay hidden until the detail button is used
-  expect(dialog).not.toHaveTextContent("Aturan uji B");
-
-  await user.click(
-    within(dialog).getByRole("button", { name: "Lihat selengkapnya" }),
-  );
-
-  // Default locale is Indonesian, so fixture copy renders in ID
+  // No second step: art, stats, and rules are all visible at once
   expect(dialog).toHaveTextContent("Aturan uji B");
   expect(within(dialog).getByText("Gundu")).toBeInTheDocument();
+  expect(
+    within(dialog).queryByRole("button", { name: "Lihat selengkapnya" }),
+  ).not.toBeInTheDocument();
 
   await user.click(within(dialog).getByRole("button", { name: "Tutup" }));
   await waitFor(() => {

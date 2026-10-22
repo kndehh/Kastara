@@ -3,7 +3,32 @@ import {ArrowUpRight,Layers3,Award,BookOpen} from 'lucide-react'
 import {type Card,type CardType,type Element,type Rarity} from '@/domain/cards'
 import {useCopy} from '@/i18n/use-copy'
 
+/**
+ * One color per stat label so the same stat always reads the same way.
+ * Keyed by the stable Indonesian label, with a text fallback for new labels.
+ */
+const STAT_COLORS:Record<string,string>={
+  'HP':'#e0777d',
+  'DMG':'#e08a5a',
+  'Bonus DMG':'#f0b96b',
+  'Sinergi DMG':'#ffd76e',
+  'Biaya':'#7aa2e3',
+  'Energy':'#63c6d4',
+  'Sinergi Energy':'#8fe0e6',
+  'Koin':'#c9b48a',
+  'Stun':'#b096e6',
+  'Balas DMG':'#e88970',
+  'Abaikan Guard':'#d799cd',
+  'Guard':'#5fc0a8',
+  'Sinergi Guard':'#86d8c5',
+  'Kartu':'#84c98f',
+  'Serangan':'#e08fa8',
+  'Giliran':'#a6adb8',
+}
+
 function statColor(label:{id:string;en:string}){
+  const known=STAT_COLORS[label.id]
+  if(known) return known
   const key=`${label.id} ${label.en}`.toLowerCase()
   if(key.includes('synergy guard')||key.includes('sinergi guard')) return '#86d8c5'
   if(key.includes('ignore guard')||key.includes('abaikan guard')) return '#d799cd'
@@ -11,12 +36,12 @@ function statColor(label:{id:string;en:string}){
   if(key.includes('synergy energy')||key.includes('sinergi energy')) return '#8fe0e6'
   if(key.includes('energy')) return '#63c6d4'
   if(key.includes('counter')||key.includes('balas')) return '#e88970'
-  if(key.includes('synergy dmg')||key.includes('sinergi dmg')) return '#f0c27b'
-  if(key.includes('bonus')) return '#e8b06a'
-  if(key.includes('dmg')||key.includes('attack')||key.includes('serangan')) return '#e3a35c'
+  if(key.includes('synergy dmg')||key.includes('sinergi dmg')) return '#ffd76e'
+  if(key.includes('bonus')) return '#f0b96b'
+  if(key.includes('dmg')||key.includes('attack')||key.includes('serangan')) return '#e08a5a'
   if(key.includes('hp')) return '#e0777d'
   if(key.includes('cost')||key.includes('biaya')) return '#7aa2e3'
-  if(key.includes('coin')||key.includes('koin')) return '#d9b45f'
+  if(key.includes('coin')||key.includes('koin')) return '#c9b48a'
   if(key.includes('stun')) return '#b096e6'
   if(key.includes('card')||key.includes('kartu')) return '#84c98f'
   if(key.includes('turn')||key.includes('giliran')) return '#a6adb8'
@@ -272,8 +297,8 @@ function SplitPanel({
           </dl>
           <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
             <Chip small label={t(card.rarity)} color={rarityColor(card.rarity)}/>
-            <Chip small label={t(card.type)}/>
-            {card.element&&<Chip small label={t(card.element)}/>}
+            <Chip small label={t(card.type)} color={typeColor(card.type)}/>
+            {card.element&&<Chip small label={t(card.element)} color={elementColor(card.element)}/>}
             <Chip small label={card.setCode}/>
           </div>
         </div>
@@ -343,23 +368,15 @@ function SplitPanel({
   )
 }
 
-export function CardPreview({card}:{card:Card}){
-  return (
-    <div className="flex justify-center">
-      <div className="w-full max-w-[380px]">
-        <SplitPanel card={card} kind="art" index={0}/>
-      </div>
-    </div>
-  )
-}
-
 export function CardOpener({card}:{card:Card}){
   return (
     <div className="card-opener flex flex-col gap-[20px] py-[24px] px-0">
-      <div className="grid grid-cols-[1fr_1.4fr_1fr] gap-[16px] items-stretch max-[768px]:grid-cols-[1fr] max-[768px]:gap-[12px] max-[767px]:grid-cols-[1fr]">
+      <div className="grid grid-cols-[minmax(0,300px)_minmax(0,1fr)] gap-[16px] items-start max-[767px]:grid-cols-[1fr] max-[767px]:gap-[12px]">
         <SplitPanel card={card} kind="art" index={0}/>
-        <SplitPanel card={card} kind="stats" index={1}/>
-        <SplitPanel card={card} kind="rules" index={2}/>
+        <div className="flex flex-col gap-[16px] min-w-0">
+          <SplitPanel card={card} kind="stats" index={1}/>
+          <SplitPanel card={card} kind="rules" index={2}/>
+        </div>
       </div>
     </div>
   )

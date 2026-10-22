@@ -1,8 +1,9 @@
 import {useRef,useState} from 'react'
 import {motion,AnimatePresence,useReducedMotion} from 'framer-motion'
-import {ArrowLeftRight,Battery,Hand,Layers,RotateCw,Sparkles,Swords,Target,Zap} from 'lucide-react'
+import {AlertTriangle,ArrowLeftRight,Battery,Check,Compass,Hand,Layers,RotateCw,Sparkles,Swords,Target,Zap} from 'lucide-react'
 import {useCopy} from '@/i18n/use-copy'
 import {publishedCards} from '@/data/cards'
+import {SimResultBanner} from '@/components/SimResultBanner'
 import type {Card,Element} from '@/domain/cards'
 
 function byId(id:string):Card{
@@ -13,6 +14,18 @@ function byId(id:string):Card{
 
 const KO_TO_WIN=3
 const ELEMENT_HEX:Record<Element,string>={api:'#e0643f',air:'#5b9fd4',tanah:'#b08a5a'}
+const TOUR_KEY='kastara:sim-tour-done'
+const GLOW_SHADOW='0 0 0 2px rgba(210,175,98,0.8), 0 0 18px rgba(210,175,98,0.4)'
+type FlowStep={label:string;done:boolean;current:boolean;optional?:boolean}
+/** Single source of truth: the guide text and the glow target both come from here. */
+type Suggestion={
+  kind:'deploy'|'attach'|'powerup'|'attack'|'end'|'none'
+  text:string
+  /** Index of the highlighted card in hand, so only one copy glows. */
+  cardIndex:number|null
+  strike:boolean
+  end:boolean
+}
 const PLAYER_START=byId('kst-laras')
 const RIVAL_ROSTER:readonly Card[]=[byId('kst-sekar'),byId('kst-arka'),byId('kst-laras')]
 const OPENING_HAND:readonly Card[]=[
@@ -23,6 +36,11 @@ const OPENING_HAND:readonly Card[]=[
   byId('kst-air'),
   byId('kst-air'),
 ]
+
+/** Replaces {name}-style placeholders in a translation. */
+function fill(template:string,vars:Record<string,string>){
+  return template.replace(/\{(\w+)\}/g,(_,key:string)=>vars[key]??'')
+}
 
 type Unit={
   card:Card
@@ -157,6 +175,29 @@ export function TurnSimulator({bare=false}:{bare?:boolean}){
   const [status,setStatus]=useState<string|null>(null)
   const [pops,setPops]=useState<Pop[]>([])
   const popId=useRef(1)
+  const [tourOpen,setTourOpen]=useState<boolean>(()=>{
+    try{
+      if(localStorage.getItem(TOUR_KEY)) return false
+    }catch{/* storage may be blocked */}
+    return true
+  })
+  // The result lives on the board itself, where the player is already looking.
+  const [resultDismissed,setResultDismissed]=useState(false)
+
+  /** Hide the coach for now; it comes back on the next visit. */
+  function dismissTour(){
+    setTourOpen(false)
+  }
+
+  /** Hide the coach for good and remember the choice. */
+  function skipTour(){
+    setTourOpen(false)
+    try{localStorage.setItem(TOUR_KEY,'1')}catch{/* storage may be blocked */}
+  }
+
+  function playAgain(){
+    reset()
+  }
 
   function pop(target:Pop['target'],value:number){
     const id=popId.current++
@@ -423,6 +464,7 @@ export function TurnSimulator({bare=false}:{bare?:boolean}){
     setState(makeInitialState())
     setStatus(null)
     setPops([])
+    setResultDismissed(false)
   }
 
   const attackCost=state.active?.card.attackCost??[]
@@ -431,21 +473,74 @@ export function TurnSimulator({bare=false}:{bare?:boolean}){
   const playerHp=state.active?`${state.active.hp}/${state.active.maxHp}`:'0/0'
   const rivalHp=`${state.rival.hp}/${state.rival.maxHp}`
 
-  function getHint(){
-    if(state.phase==='won') return t('simWin')
-    if(state.phase==='lost') return t('simLose')
-    if(!state.active) return t('simHintNoSpace')
-    if(state.attacked) return t('simHintAttacked')
-    if(canAttack) return t('simHintAttack')
-    if(state.energyUsed) return t('simHintSaveEnergy')
-    const needed=state.active.card.attackCost?.find(token=>token!=='any')
-    const hasMatch=state.hand.some(card=>card.type==='energy'&&(!needed||card.element===needed))
-    if(!hasMatch) return t('simHintNoMatchingEnergy')
-    const suffix=t('simHintAttachSuffix')
-    return `${t('simHintAttachElement')} ${t(needed??state.active.card.element??'energy')}${suffix?` ${suffix}`:''} ${t('simHintTo')} ${state.active.card.name[locale]}.`
+  function getSuggestion():Suggestion{
+    if(state.phase==='won') return {kind:'none',text:t('simWin'),cardIndex:null,strike:false,end:false}
+    if(state.phase==='lost') return {kind:'none',text:t('simLose'),cardIndex:null,strike:false,end:false}
+    const attackNeeded=state.active?.card.attackCost?.find(token=>token!=='any')??null
+    const matchingIndex=state.active
+      ?state.hand.findIndex(card=>card.type==='energy'&&(!attackNeeded||card.element===attackNeeded))
+      :-1
+    if(!state.active){
+      const characterIndex=state.hand.findIndex(card=>card.type==='character')
+      const character=characterIndex>=0?state.hand[characterIndex]:null
+      return {
+        kind:'deploy',
+        text:character?`${character.name[locale]}: ${t('simHintDeploy')}.`:t('simHintNoSpace'),
+        cardIndex:characterIndex>=0?characterIndex:null,
+        strike:false,
+        end:false,
+      }
+    }
+    if(matchingIndex>=0&&!state.energyUsed){
+      const suffix=t('simHintAttachSuffix')
+      return {
+        kind:'attach',
+        text:`${t('simHintAttachElement')} ${t(attackNeeded??state.active.card.element??'energy')}${suffix?` ${suffix}`:''} ${t('simHintTo')} ${state.active.card.name[locale]}.`,
+        cardIndex:matchingIndex,
+        strike:false,
+        end:false,
+      }
+    }
+    const powerupIndexes=state.active.powerups.length<2
+      ?state.hand.map((card,index)=>({card,index})).filter(entry=>entry.card.type==='power_up')
+      :[]
+    const synergyEntry=powerupIndexes.find(entry=>entry.card.element===state.active?.card.element)
+    const powerupEntry=synergyEntry??powerupIndexes[0]
+    if(powerupEntry&&!state.powerupUsed){
+      const synergy=powerupEntry.card.element===state.active.card.element
+      return {
+        kind:'powerup',
+        text:fill(t('simHintPowerSuggest'),{name:powerupEntry.card.name[locale]})+ (synergy?` ${t('simLogSynergy')}`:''),
+        cardIndex:powerupEntry.index,
+        strike:false,
+        end:false,
+      }
+    }
+    if(!state.attacked&&canAttack) return {kind:'attack',text:t('simHintAttack'),cardIndex:null,strike:true,end:false}
+    if(state.attacked) return {kind:'end',text:t('simHintAttacked'),cardIndex:null,strike:false,end:true}
+    if(state.energyUsed) return {kind:'end',text:t('simHintSaveEnergy'),cardIndex:null,strike:false,end:true}
+    return {kind:'end',text:t('simHintNoMatchingEnergy'),cardIndex:null,strike:false,end:true}
   }
 
-  const hint=getHint()
+  const suggestion=getSuggestion()
+  const hint=suggestion.text
+  const flow:readonly FlowStep[]=[
+    {label:t('simStepEnergy'),done:state.energyUsed,current:suggestion.kind==='attach'},
+    {label:t('simStepPower'),done:state.powerupUsed,current:suggestion.kind==='powerup',optional:true},
+    {label:t('simStepStrike'),done:state.attacked,current:suggestion.kind==='attack'},
+    {label:t('simStepEnd'),done:false,current:suggestion.kind==='end'},
+  ]
+  // The glow always follows the current suggestion, never a separate tutorial step.
+  const glowIndex=suggestion.cardIndex
+  const strikeGlow=suggestion.kind==='attack'
+  const endGlow=suggestion.kind==='end'
+  const toGlowClass=(on:boolean)=>on&&!reduce?'animate-sim-glow':''
+  const toGlowStyle=(on:boolean)=>on&&reduce?{boxShadow:GLOW_SHADOW}:undefined
+  // The coach follows the same suggestion, so its text can never point somewhere else.
+  const tourStep=suggestion.kind==='attack'?1:suggestion.kind==='end'?2:0
+  const won=state.phase==='won'
+  const lost=state.phase==='lost'
+  const resultReason=state.log[0]?.text??(won?t('simWin'):t('simLose'))
 
   function renderBenchSlot(index:number){
     const unit=state.bench[index]
@@ -518,7 +613,33 @@ export function TurnSimulator({bare=false}:{bare?:boolean}){
           <span className="text-[#b5b2a9] normal-case tracking-[.02em] max-[767px]:[grid-column:2] max-[767px]:justify-self-end max-[767px]:ml-0 max-[767px]:whitespace-nowrap max-[339px]:[grid-column:1] max-[339px]:justify-self-start" title={`${t('simHand')} ${state.hand.length} · ${t('simNoHandLimit')}`}><Hand size={13} aria-hidden="true"/>{t('simHand')} {state.hand.length}<span className="lab-hud-nolimit"> · {t('simNoHandLimit')}</span></span>
         </div>
 
-        <div className="border border-[rgba(44,45,49,0.8)] rounded-[14px] overflow-hidden bg-[radial-gradient(90%_80%_at_50%_0%,rgba(210,175,98,0.06),transparent_65%),linear-gradient(180deg,#16171a,#0f1013)]">
+        <div
+          className="[grid-column:1/-1] flex flex-wrap items-center gap-x-[10px] gap-y-[8px] py-[10px] px-[14px] border border-[rgba(44,45,49,0.7)] rounded-[10px] bg-[rgba(20,21,24,0.5)] max-[767px]:py-[9px] max-[767px]:px-[11px]"
+          aria-label={t('simFlowTitle')}
+        >
+          <span className="text-[9px] tracking-[0.16em] uppercase text-[#85878b] font-semibold">{t('simFlowTitle')}</span>
+          <ol className="list-none m-0 p-0 flex flex-wrap items-center gap-[6px]">
+            {flow.map((step,i)=>(
+              <li
+                key={step.label}
+                aria-current={step.current?'step':undefined}
+                data-state={step.current?'current':step.done?'done':'todo'}
+                className="inline-flex items-center gap-[6px] py-[4px] px-[9px] rounded-[999px] border transition-colors duration-[.2s] data-[state=current]:border-[rgba(210,175,98,0.65)] data-[state=current]:bg-[rgba(210,175,98,0.12)] data-[state=current]:text-[#e8cd8a] data-[state=done]:border-[rgba(74,184,122,0.35)] data-[state=done]:bg-[rgba(74,184,122,0.06)] data-[state=done]:text-[#9aa79b] data-[state=todo]:border-[rgba(44,45,49,0.9)] data-[state=todo]:text-[#8b8d91]"
+              >
+                <span
+                  data-state={step.current?'current':step.done?'done':'todo'}
+                  className="grid place-items-center w-[15px] h-[15px] rounded-full border text-[8px] leading-none data-[state=current]:border-[rgba(210,175,98,0.6)] data-[state=current]:text-[#d2af62] data-[state=done]:border-[rgba(74,184,122,0.4)] data-[state=done]:text-[#7fc08a] data-[state=todo]:border-[rgba(44,45,49,0.9)] data-[state=todo]:text-[#6f7175]"
+                >
+                  {step.done?<Check size={10} aria-hidden="true"/>:i+1}
+                </span>
+                <span className="text-[10px] tracking-[0.05em] uppercase font-semibold">{step.label}</span>
+                {step.optional&&<span className="text-[8.5px] text-[#6f7175]">({t('simFlowOptional')})</span>}
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div className="relative border border-[rgba(44,45,49,0.8)] rounded-[14px] overflow-hidden bg-[radial-gradient(90%_80%_at_50%_0%,rgba(210,175,98,0.06),transparent_65%),linear-gradient(180deg,#16171a,#0f1013)]">
           <div className="py-[18px] px-[20px] relative max-[767px]:p-[14px] border-b border-dashed border-b-[rgba(44,45,49,0.55)]">
             <div className="flex items-center justify-between gap-[10px] mb-[12px]">
               <span className="text-[9px] tracking-[0.16em] uppercase text-[#85878b] font-semibold">{t('simRival')}</span>
@@ -573,7 +694,7 @@ export function TurnSimulator({bare=false}:{bare?:boolean}){
 
           <div className="text-center font-heading text-[10px] tracking-[0.26em] text-[#6f7175] py-[4px] px-0 border-t border-dashed border-[rgba(44,45,49,0.5)] border-b bg-[rgba(11,12,14,0.4)]" aria-hidden="true">VS</div>
 
-          <div className="py-[18px] px-[20px] relative max-[767px]:p-[14px] bg-[rgba(210,175,98,0.02)]">
+          <div className="py-[18px] px-[20px] relative max-[767px]:p-[14px] bg-[rgba(210,175,98,0.02)]" data-board-side="player">
             <div className="flex items-center justify-between gap-[10px] mb-[12px]">
               <span className="text-[9px] tracking-[0.16em] uppercase text-[#85878b] font-semibold">{t('simYou')}</span>
               <span className="text-[9px] tracking-[0.1em] uppercase text-[#6f7175]">{t('simBench')} {state.bench.length}/2</span>
@@ -650,15 +771,68 @@ export function TurnSimulator({bare=false}:{bare?:boolean}){
               </div>
             </div>
           </div>
+
+          {(won||lost)&&!resultDismissed&&(
+            <SimResultBanner
+              won={won}
+              reason={resultReason}
+              turn={state.turn}
+              ko={state.ko}
+              koToWin={KO_TO_WIN}
+              onPlayAgain={playAgain}
+              onViewBoard={()=>setResultDismissed(true)}
+            />
+          )}
         </div>
 
         <div className="flex flex-col gap-[12px] p-[16px] border border-[rgba(44,45,49,0.7)] rounded-[12px] bg-[rgba(20,21,24,0.6)] max-[339px]:p-[13px]">
+          {tourOpen&&(
+            <div className="flex flex-col gap-[8px] p-[13px_14px] rounded-[10px] border border-[rgba(210,175,98,0.5)] bg-[rgba(210,175,98,0.08)]" aria-label={t('simTourBadge')}>
+              <div className="flex items-center justify-between gap-[8px]">
+                <span className="inline-flex items-center gap-[6px] text-[9px] tracking-[0.14em] uppercase font-semibold text-[#d2af62]">
+                  <Compass size={13} aria-hidden="true"/>
+                  {t('simTourBadge')} · {t('simTourStep')} {tourStep+1}/3
+                </span>
+                <span className="flex gap-[4px]" aria-hidden="true">
+                  {[0,1,2].map(dot=>(
+                    <span key={dot} data-on={dot<=tourStep} className="inline-block w-[5px] h-[5px] rounded-full bg-[rgba(210,175,98,0.25)] data-[on=true]:bg-[#d2af62]"/>
+                  ))}
+                </span>
+              </div>
+              <p className="m-0 text-[12.5px] leading-[1.6] text-[#d8d5cd]">{t(tourStep===0?'simTour1':tourStep===1?'simTour2':'simTour3')}</p>
+              <div className="flex items-center justify-between gap-[8px]">
+                <button
+                  type="button"
+                  className="text-[10.5px] text-[#8b8d91] bg-transparent border-0 p-0 cursor-pointer hover:text-[#ece9e2] focus-visible:outline-2 focus-visible:outline-[#d2af62] focus-visible:outline-offset-[2px]"
+                  onClick={skipTour}
+                >
+                  {t('simTourSkip')}
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-[5px] py-[7px] px-[14px] rounded-[6px] border border-[rgba(210,175,98,0.55)] bg-[rgba(210,175,98,0.16)] text-[#e8cd8a] text-[11px] font-semibold cursor-pointer hover:bg-[rgba(210,175,98,0.26)] focus-visible:outline-2 focus-visible:outline-[#d2af62] focus-visible:outline-offset-[2px]"
+                  onClick={dismissTour}
+                >
+                  {t('simTourDone')}
+                </button>
+              </div>
+            </div>
+          )}
+          {status&&(
+            <div className="flex items-center gap-[8px] py-[9px] px-[12px] rounded-[7px] border border-[rgba(232,122,102,0.35)] bg-[rgba(232,122,102,0.1)] text-[12px] leading-[1.55] text-[#f0b6a4] [&_svg]:[flex:none]" role="alert">
+              <AlertTriangle size={14} aria-hidden="true"/>
+              <span>{status}</span>
+            </div>
+          )}
           <div className="flex items-center gap-[8px] py-[10px] px-[12px] rounded-[7px] border border-[rgba(210,175,98,0.13)] bg-[rgba(210,175,98,0.05)] text-[12px] leading-[1.55] text-[#d8d5cd] [&_svg]:[flex:none] [&_svg]:text-[#d2af62]" role="status" aria-live="polite">
             <Sparkles size={14} aria-hidden="true"/>
-            <span>{status??hint}</span>
+            <span>{hint}</span>
           </div>
 
-          <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-[8px] max-[339px]:grid-cols-[repeat(3,minmax(0,1fr))]" aria-label={t('simHand')}>
+          <div
+            className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-[8px] max-[339px]:grid-cols-[repeat(3,minmax(0,1fr))]"
+            aria-label={t('simHand')}
+          >
             {state.hand.length===0&&<span className="text-[11px] text-[#85878b] py-[18px] px-0 [grid-column:1/-1]">{t('simHandEmpty')}</span>}
             <AnimatePresence initial={false}>
               {state.hand.map((card,index)=>{
@@ -670,19 +844,22 @@ export function TurnSimulator({bare=false}:{bare?:boolean}){
                 const meta=card.type==='character'
                   ?t('character')
                   :`${t(card.element??'energy')} · ${t(card.type)}`
+                const highlight=!locked&&index===glowIndex
                 return (
                   <motion.button
                     key={`${card.id}-${index}`}
                     layout
                     type="button"
-                    className="flex flex-col gap-[4px] p-[6px] rounded-[8px] border border-[rgba(44,45,49,0.85)] bg-[linear-gradient(180deg,#191a1d,#131417)] text-[#ece9e2] text-left cursor-pointer transition-[transform,border-color,opacity] duration-[.18s] hover:[transform:translateY(-3px)] hover:border-[rgba(210,175,98,0.45)] data-[locked=true]:opacity-[.5] data-[locked=true]:border-[rgba(44,45,49,0.6)] data-[locked=true]:hover:[transform:none] data-[locked=true]:hover:border-[rgba(44,45,49,0.6)] focus-visible:outline-2 focus-visible:outline-[#d2af62] focus-visible:outline-offset-[2px]"
+                    className={`flex flex-col gap-[4px] p-[6px] rounded-[8px] border border-[rgba(44,45,49,0.85)] bg-[linear-gradient(180deg,#191a1d,#131417)] text-[#ece9e2] text-left cursor-pointer transition-[transform,border-color,opacity] duration-[.18s] hover:[transform:translateY(-3px)] hover:border-[rgba(210,175,98,0.45)] data-[locked=true]:opacity-[.5] data-[locked=true]:border-[rgba(44,45,49,0.6)] data-[locked=true]:hover:[transform:none] data-[locked=true]:hover:border-[rgba(44,45,49,0.6)] focus-visible:outline-2 focus-visible:outline-[#d2af62] focus-visible:outline-offset-[2px] ${toGlowClass(highlight)}`}
                     data-type={card.type}
                     data-locked={locked||undefined}
+                    data-hint={highlight?'true':undefined}
                     onClick={()=>playCard(card)}
                     initial={{opacity:0,y:8}}
                     animate={{opacity:1,y:0}}
                     exit={{opacity:0,scale:.9}}
                     transition={{duration:.2}}
+                    style={toGlowStyle(highlight)}
                     aria-label={`${card.name[locale]}, ${meta}`}
                   >
                     <span className="aspect-[5/7] rounded-[5px] overflow-hidden bg-[#111215] border border-[rgba(44,45,49,0.7)] grid place-items-center [&_img]:w-full [&_img]:h-full [&_img]:object-cover [&_img]:block [&_span]:font-heading [&_span]:text-[34px] [&_span]:text-[#d2af62] [&_span]:opacity-[.6]">
@@ -707,9 +884,11 @@ export function TurnSimulator({bare=false}:{bare?:boolean}){
           <div className="flex gap-[8px] flex-wrap max-[339px]:gap-[6px]">
             <button
               type="button"
-              className="inline-flex items-center gap-[7px] [flex:1] justify-center min-h-[44px] py-0 px-[16px] rounded-[8px] border border-[rgba(210,175,98,0.45)] bg-[rgba(210,175,98,0.13)] text-[#e8cd8a] text-[12px] font-semibold font-heading cursor-pointer hover:[&:not(:disabled)]:bg-[rgba(210,175,98,0.22)] disabled:opacity-[.45] disabled:cursor-not-allowed disabled:[filter:saturate(.35)] disabled:bg-[rgba(210,175,98,0.05)] focus-visible:outline-2 focus-visible:outline-[#d2af62] focus-visible:outline-offset-[2px] max-[339px]:[flex:1_1_100%]"
+              className={`inline-flex items-center gap-[7px] [flex:1] justify-center min-h-[44px] py-0 px-[16px] rounded-[8px] border border-[rgba(210,175,98,0.45)] bg-[rgba(210,175,98,0.13)] text-[#e8cd8a] text-[12px] font-semibold font-heading cursor-pointer hover:[&:not(:disabled)]:bg-[rgba(210,175,98,0.22)] disabled:opacity-[.45] disabled:cursor-not-allowed disabled:[filter:saturate(.35)] disabled:bg-[rgba(210,175,98,0.05)] focus-visible:outline-2 focus-visible:outline-[#d2af62] focus-visible:outline-offset-[2px] max-[339px]:[flex:1_1_100%] ${toGlowClass(strikeGlow)}`}
               onClick={attack}
               disabled={!canAttack}
+              data-hint={strikeGlow?'true':undefined}
+              style={toGlowStyle(strikeGlow)}
             >
               <Swords size={16} aria-hidden="true"/>
               {t('simStrike')}
@@ -727,7 +906,7 @@ export function TurnSimulator({bare=false}:{bare?:boolean}){
                 ))}
               </span>
             </button>
-            <button type="button" className="inline-flex items-center gap-[6px] min-h-[44px] py-0 px-[14px] rounded-[8px] border border-[rgba(44,45,49,0.9)] bg-transparent text-[#b5b2a9] text-[11px] cursor-pointer hover:[&:not(:disabled)]:border-[rgba(210,175,98,0.35)] hover:[&:not(:disabled)]:text-[#ece9e2] disabled:opacity-[.45] disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-[#d2af62] focus-visible:outline-offset-[2px]" onClick={endTurn} disabled={state.phase!=='playing'}>
+            <button type="button" className={`inline-flex items-center gap-[6px] min-h-[44px] py-0 px-[14px] rounded-[8px] border border-[rgba(44,45,49,0.9)] bg-transparent text-[#b5b2a9] text-[11px] cursor-pointer hover:[&:not(:disabled)]:border-[rgba(210,175,98,0.35)] hover:[&:not(:disabled)]:text-[#ece9e2] disabled:opacity-[.45] disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-[#d2af62] focus-visible:outline-offset-[2px] ${toGlowClass(endGlow)}`} onClick={endTurn} disabled={state.phase!=='playing'} data-hint={endGlow?'true':undefined} style={toGlowStyle(endGlow)}>
               <Hand size={15} aria-hidden="true"/>
               {t('simEndTurn')}
             </button>
@@ -757,6 +936,7 @@ export function TurnSimulator({bare=false}:{bare?:boolean}){
           <p className="text-[9.5px] leading-[1.6] text-[#6f7175] m-0">{t('simFoot')}</p>
         </div>
       </div>
+
     </section>
   )
 }

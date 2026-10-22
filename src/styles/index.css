@@ -33,6 +33,13 @@
   --radius-xl:12px;
   --radius-2xl:16px;
 }
+@theme {
+  --animate-sim-glow: sim-glow 1.6s ease-in-out infinite;
+  @keyframes sim-glow {
+    0%,100% {box-shadow:0 0 0 2px rgba(210,175,98,0),0 0 18px rgba(210,175,98,0)}
+    50% {box-shadow:0 0 0 2px rgba(210,175,98,0.8),0 0 18px rgba(210,175,98,0.45)}
+  }
+}
 :root,
 .dark {color-scheme:dark;--background:#0b0c0e;--foreground:#ece9e2;--card:#151619;--popover:#191a1d;--primary:#d2af62;--primary-foreground:#13120f;--secondary:#242529;--muted:#202125;--muted-foreground:#b5b2a9;--accent:#2a2924;--border:#34363b;--input:#45464b;--ring:#d2af62;--destructive:#efaaaa;--radius:8px}
 @layer base {

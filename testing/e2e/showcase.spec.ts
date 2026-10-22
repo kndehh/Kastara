@@ -36,9 +36,9 @@ test('mobile menu traps focus, supports Escape and restores focus',async({page})
   await expect(page.getByRole('dialog')).not.toBeVisible()
   await expect(trigger).toBeFocused()
   await trigger.click()
-  await page.getByRole('dialog').getByRole('link',{name:'Kartu',exact:true}).click()
+  await page.getByRole('dialog').getByRole('button',{name:'Kartu',exact:true}).click()
   await expect(page.getByRole('dialog')).not.toBeVisible()
-  await expect(page).toHaveURL(/\/kartu$/)
+  await expect(page).toHaveURL('/')
 })
 
 test('deep order route cannot reveal a confirmation from a public reference',async({page})=>{

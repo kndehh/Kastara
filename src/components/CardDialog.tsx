@@ -1,4 +1,3 @@
-import {useState} from 'react'
 import {X} from 'lucide-react'
 import {type Card} from '@/domain/cards'
 import {useCopy} from '@/i18n/use-copy'
@@ -11,7 +10,7 @@ import {
   DialogDescription,
   DialogClose,
 } from '@/components/ui/dialog'
-import {CardOpener,CardPreview,elementColor,rarityColor,typeColor} from '@/components/CardParts'
+import {CardOpener,elementColor,rarityColor,typeColor} from '@/components/CardParts'
 
 export function CardDialog({
   card,
@@ -29,12 +28,12 @@ export function CardDialog({
     >
       <DialogContent
         showCloseButton={false}
-        className="p-[20px] [&_.dialog-title]:text-[16px] flex flex-col gap-[14px] max-h-[calc(100dvh_-_48px)] overflow-y-[auto] w-[min(880px,calc(100vw_-_32px))] [&_.card-opener]:p-0 [&_.card-opener]:gap-[18px] max-[767px]:max-h-[calc(100dvh_-_24px)] max-[767px]:w-[calc(100vw_-_24px)]"
+        className="p-[20px] [&_.dialog-title]:text-[16px] flex flex-col gap-[14px] max-h-[calc(100dvh_-_48px)] overflow-y-[auto] w-[min(760px,calc(100vw_-_32px))] [&_.card-opener]:p-0 [&_.card-opener]:gap-[18px] max-[767px]:max-h-[calc(100dvh_-_24px)] max-[767px]:w-[calc(100vw_-_24px)]"
         style={{
           background: "#151619",
           border: "1px solid rgba(210,175,98,0.15)",
           borderRadius: 12,
-          width: "min(880px, calc(100vw - 32px))",
+          width: "min(760px, calc(100vw - 32px))",
           maxWidth: "none",
           maxHeight: "calc(100dvh - 48px)",
           overflowY: "auto",
@@ -48,7 +47,6 @@ export function CardDialog({
 
 function CardDialogBody({card}:{card:Card}){
   const {locale,t}=useCopy()
-  const [full,setFull]=useState(false)
 
   return (
     <>
@@ -97,14 +95,7 @@ function CardDialogBody({card}:{card:Card}){
           {t("close")}
         </Button>
       </DialogClose>
-      {full ? (
-        <CardOpener card={card} />
-      ) : (
-        <div className="flex flex-col items-center gap-[18px]">
-          <CardPreview card={card} />
-          <Button onClick={() => setFull(true)}>{t("viewFull")}</Button>
-        </div>
-      )}
+      <CardOpener card={card} />
     </>
   );
 }
