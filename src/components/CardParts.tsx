@@ -70,6 +70,7 @@ const TYPE_COLORS:Record<CardType,string>={
 const ELEMENT_COLORS:Record<Element,string>={
   api:'#e0643f',
   air:'#5b9fd4',
+  wind:'#6fd0b0',
   tanah:'#b08a5a',
 }
 

@@ -1,15 +1,21 @@
 import {motion} from 'framer-motion'
-import {Link} from 'react-router-dom'
-import {ArrowLeft,FlaskConical} from 'lucide-react'
+import {Link,useSearchParams} from 'react-router-dom'
+import {ArrowLeft,FlaskConical,ChevronRight} from 'lucide-react'
 import {TurnSimulator} from '@/components/TurnSimulator'
 import {MapGuide} from '@/components/MapGuide'
 import {useCopy} from '@/i18n/use-copy'
+import {Button} from '@/components/ui/button'
 
 export function ExperimentPage(){
   const {t}=useCopy()
+  const [params,setParams]=useSearchParams()
+  const step=params.get('step')==='2'?2:1
+  const next=()=>setParams({step:'2'})
+  const backMap=()=>{setParams(new URLSearchParams())}
+
   return (
     <motion.div
-      className="max-w-[1216px] my-0 mx-auto px-[48px] w-full max-[767px]:px-[20px]"
+      className="px-[20px] max-[1023px]:px-[20px] min-[1024px]:px-[48px] max-w-[1216px] mx-auto w-full"
       initial={{opacity:0,y:16}}
       animate={{opacity:1,y:0}}
       transition={{duration:.5,ease:'easeOut'}}
@@ -72,8 +78,36 @@ export function ExperimentPage(){
         </p>
       </section>
 
-      <TurnSimulator bare/>
-      <MapGuide/>
+      {step===1?(
+        <>
+          <MapGuide/>
+          <div style={{display:'flex',justifyContent:'center',marginTop:34,marginBottom:40}}>
+            <Button
+              size="lg"
+              style={{minHeight:44,paddingInline:20}}
+              onClick={next}
+            >
+              {t('expNext')}
+              <ChevronRight aria-hidden="true" size={16}/>
+            </Button>
+          </div>
+        </>
+      ):(
+        <>
+          <div style={{display:'flex',justifyContent:'flex-start',marginTop:-6}}>
+            <Button
+              variant="outline"
+              size="sm"
+              style={{height:32,paddingInline:12}}
+              onClick={backMap}
+            >
+              <ChevronRight aria-hidden="true" size={14} className="-rotate-180"/>
+              {t('expBackMap')}
+            </Button>
+          </div>
+          <TurnSimulator bare/>
+        </>
+      )}
     </motion.div>
   )
 }

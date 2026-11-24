@@ -47,7 +47,7 @@ function Zone({zone,index}:{
 
   return (
     <motion.div
-      className="p-[16px] bg-[linear-gradient(180deg,#17181b_0%,#121315_100%)] border border-[rgba(44,45,49,0.6)] rounded-[11px]"
+      className="p-[22px] bg-[linear-gradient(180deg,#17181b_0%,#121315_100%)] border border-[rgba(44,45,49,0.6)] rounded-[11px]"
       initial={{opacity:0,y:14}}
       whileInView={{opacity:1,y:0}}
       viewport={{once:true,margin:'-40px'}}
@@ -58,7 +58,7 @@ function Zone({zone,index}:{
         <h3>{t(zone.labelKey)}</h3>
         <span className="font-heading text-[10px] text-[#85878b]">{zone.count}</span>
       </div>
-      <div className="flex gap-[6px] flex-wrap min-h-[52px] items-center mt-[13px] mx-0 mb-[11px]" data-zone={zone.key}>
+      <div className="flex gap-[11px] flex-wrap min-h-[64px] items-center mt-[15px] mb-[13px] mx-0" data-zone={zone.key}>
         {Array.from({length:zone.count},(_,i)=>(
           <FaceDown key={i} tone={zone.tone} slotIndex={i}/>
         ))}
@@ -72,7 +72,7 @@ export function MapGuide(){
   const {t}=useCopy()
 
   return (
-    <section id="peta" className="w-[min(1216px,calc(100%_-_96px))] mx-auto max-[1023px]:w-[calc(100%_-_64px)] max-[767px]:w-[calc(100%_-_40px)] py-[92px] px-0 border-b border-[#26272b] max-[767px]:py-[62px] max-[767px]:px-0 py-[92px] px-0" aria-labelledby="map-title">
+    <section id="peta" className="w-full max-[1023px]:px-[20px] min-[1024px]:w-[calc(100%_-_96px)] mx-auto py-[92px] max-[767px]:py-[62px] max-[639px]:py-[48px] border-b border-[#26272b]" aria-labelledby="map-title">
       <div className="max-w-[730px] mb-[38px] [&_p]:mt-[18px] [&_p]:max-w-[650px] max-[767px]:mb-[30px] max-[767px]:[&_p]:text-[13px]">
         <h2 id="map-title" style={{
           fontFamily:'"Unbounded",sans-serif',
@@ -97,7 +97,7 @@ export function MapGuide(){
         </p>
       </div>
 
-      <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-[14px] mt-[34px]" role="list">
+      <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] max-[1023px]:grid-cols-[repeat(2,minmax(0,1fr))] max-[639px]:grid-cols-[1fr] gap-[14px] mt-[34px]" role="list">
         <motion.div
           className="flex gap-[12px] p-[16px] bg-[linear-gradient(180deg,rgba(23,24,27,0.7)_0%,rgba(18,19,21,0.7)_100%)] border border-[rgba(44,45,49,0.6)] rounded-[10px] [&_div]:flex [&_div]:flex-col [&_div]:gap-[5px] [&_strong]:font-heading [&_strong]:text-[12px] [&_strong]:font-medium [&_strong]:text-[#ece9e2] [&_span]:text-[11px] [&_span]:leading-[1.65] [&_span]:text-[#8b8d91]"
           role="listitem"
@@ -142,13 +142,14 @@ export function MapGuide(){
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-[14px] mt-[14px]">
+      <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] max-[1023px]:grid-cols-[repeat(2,minmax(0,1fr))] max-[639px]:grid-cols-[1fr] gap-[22px] mt-[14px]">
         {ZONES.map((z,i)=>(
           <Zone key={z.key} zone={z} index={i}/>
         ))}
       </div>
 
       <p className="mt-[18px] mx-0 mb-0 text-[11px] text-[#8f8f95] leading-[1.6]">{t('mapNote')}</p>
+      <p className="mt-[10px] mx-0 mb-0 text-[11px] text-[#8b8d91] leading-[1.55]">{t('deckNote')}</p>
     </section>
   )
 }

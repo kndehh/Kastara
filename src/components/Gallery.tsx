@@ -107,10 +107,6 @@ export function Gallery({ cards }: { cards: readonly Card[] }) {
             </button>
           ))}
         </div>
-        <Link className="inline-flex items-center gap-[7px] text-[#d2af62] text-[12px] no-underline border-b border-[rgba(210,175,98,0.3)] pb-[3px] transition-[border-color,color] duration-[.2s] hover:text-[#e8cd8a] hover:[border-bottom-color:#d2af62]" to="/kartu">
-          {t("gallerySeeAll")}
-          <ArrowRight aria-hidden="true" size={15} />
-        </Link>
       </div>
 
       <div role="status" aria-live="polite" className="mt-[14px] text-[11px] text-[#85878b]">
@@ -136,7 +132,7 @@ export function Gallery({ cards }: { cards: readonly Card[] }) {
         ) : (
           <motion.div
             key="grid"
-            className="grid grid-cols-[repeat(5,minmax(0,1fr))] [grid-auto-rows:auto] gap-[14px] mt-[18px]"
+            className="grid grid-cols-[repeat(5,minmax(0,1fr))] max-[1023px]:grid-cols-[repeat(3,minmax(0,1fr))] max-[639px]:grid-cols-[repeat(2,minmax(0,1fr))] [grid-auto-rows:auto] gap-[14px] mt-[18px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -149,7 +145,7 @@ export function Gallery({ cards }: { cards: readonly Card[] }) {
         )}
       </AnimatePresence>
 
-      <Link className="inline-flex items-center gap-[7px] text-[#d2af62] text-[12px] no-underline border-b border-[rgba(210,175,98,0.3)] pb-[3px] transition-[border-color,color] duration-[.2s] hover:text-[#e8cd8a] hover:[border-bottom-color:#d2af62] mt-[22px]" to="/kartu">
+      <Link className="inline-flex items-center justify-center gap-[8px] mt-[22px] min-h-[44px] px-[18px] rounded-[8px] border border-[rgba(210,175,98,0.45)] bg-[rgba(210,175,98,0.08)] text-[13px] text-[#e8cd8a] no-underline transition-colors duration-[.2s] hover:bg-[rgba(210,175,98,0.18)] focus-visible:outline-2 focus-visible:outline-[#d2af62] focus-visible:outline-offset-[2px]" to="/kartu">
         {t("galleryMore")}
         <ArrowRight aria-hidden="true" size={15} />
       </Link>

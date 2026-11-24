@@ -2,6 +2,7 @@ import {useState} from 'react'
 import {Link} from 'react-router-dom'
 import {motion,AnimatePresence,useReducedMotion} from 'framer-motion'
 import {Hand,Users,BatteryCharging,Zap,Swords,ScrollText,Target,Coins,Sparkle,RotateCw} from 'lucide-react'
+import {Button} from '@/components/ui/button'
 import {useCopy} from '@/i18n/use-copy'
 import type {Dictionary} from '@/i18n'
 
@@ -45,7 +46,7 @@ export function GameplayFlow(){
   ]
 
   return (
-    <section id="alur" className="w-[min(1216px,calc(100%_-_96px))] mx-auto max-[1023px]:w-[calc(100%_-_64px)] max-[767px]:w-[calc(100%_-_40px)] py-[92px] px-0 border-b border-[#26272b] max-[767px]:py-[62px] max-[767px]:px-0" aria-labelledby="flow-title">
+    <section id="alur" className="w-full max-[1023px]:px-[20px] min-[1024px]:w-[calc(100%_-_96px)] mx-auto py-[92px] max-[767px]:py-[62px] max-[639px]:py-[48px] border-b border-[#26272b]" aria-labelledby="flow-title">
       <div className="max-w-[730px] mb-[38px] [&_p]:mt-[18px] [&_p]:max-w-[650px] max-[767px]:mb-[30px] max-[767px]:[&_p]:text-[13px]">
         <h2 id="flow-title" style={{
           fontFamily:'"Unbounded",sans-serif',
@@ -113,7 +114,7 @@ export function GameplayFlow(){
         >
           {tab==='howto'?(
             <>
-              <ol className="grid grid-cols-[repeat(5,1fr)] gap-[14px] mt-[44px] relative max-[767px]:grid-cols-[1fr_1fr] max-[767px]:gap-[12px] max-[767px]:mt-[30px] max-[767px]:[&>li:last-child]:[grid-column:1/-1]">
+              <ol className="grid grid-cols-[repeat(5,1fr)] max-[1023px]:grid-cols-[repeat(2,minmax(0,1fr))] max-[639px]:grid-cols-[1fr] gap-[14px] mt-[44px] relative">
                 {steps.map((step,i)=>{
                   const Icon=step.icon
                   return (
@@ -157,10 +158,17 @@ export function GameplayFlow(){
         </motion.div>
       </AnimatePresence>
 
-      <p className="mt-[26px] text-[12px] text-[#85878b] [&_a]:text-[#d2af62] [&_a]:no-underline [&_a]:border-b [&_a]:border-[rgba(210,175,98,0.35)] [&_a]:pb-[1px] [&_a]:transition-[border-color,color] [&_a]:duration-[.2s] [&_a:hover]:text-[#e8cd8a] [&_a:hover]:[border-bottom-color:#d2af62]">
-        {t('flowSimPrompt')}{' '}
-        <Link to="/experiment">{t('flowSimLink')}</Link>
-      </p>
+      <div className="mt-[26px] max-[639px]:mt-[20px]">
+        <Button
+          asChild
+          size="lg"
+          style={{minHeight:48,paddingInline:22,fontSize:13}}
+        >
+          <Link to="/experiment" style={{display:'flex',alignItems:'center',gap:6}}>
+            {t('flowSimLink')}
+          </Link>
+        </Button>
+      </div>
     </section>
   )
 }

@@ -8,7 +8,7 @@ export const id = {
   close: "Tutup",
   nav: "Navigasi utama",
   home: "Beranda",
-  heroEyebrow: "Card game bikinan anak Indonesia",
+  heroEyebrow: "Indonesia Heritage trading card game",
   heroLine1: "Mainan lama.",
   heroLine2: "Cara main baru.",
   heroCopy:
@@ -20,6 +20,11 @@ export const id = {
   flowTabRules: "Rules",
   flowSimPrompt: "Pengin nyoba dulu sebelum ngerti semua?",
   flowSimLink: "Mainkan satu ronde di sini.",
+  simWhereLabel: "Aksi kamu sekarang",
+  expStep1: "Peta meja",
+  expStep2: "Coba mekaniknya dulu",
+  expNext: "Lanjut",
+  expBackMap: "Peta meja",
   ruleGoalTitle: "Cara menang",
   ruleGoalCopy:
     "Kumpulin 3 KO duluan. Tiap Character lawan tumbang, hitunganmu naik 1.",
@@ -75,6 +80,7 @@ export const id = {
   element: "Elemen",
   api: "Api",
   air: "Air",
+  wind: "Udara",
   tanah: "Tanah",
   visualNote: "Bentuk geometris, bukan desain kartu final.",
   aboutTitle: "Dari lapangan ke meja.",
@@ -104,9 +110,9 @@ export const id = {
   galleryFiltered: "hasil filter",
   cardsPageTitle: "Semua kartu.",
   cardsPageCopy:
-    "Kartu dari draf PRD Kastara. Buka satu kartu buat liat gambar, elemen, statistik, sama efeknya.",
+    "Kenalin kartu Kastara. Buka satu kartu buat liat gambar, elemen, statistik, sama efeknya.",
   cardsPageFoot:
-    "Sebagian gambar masih Coming soon. Angka dan aturan mengikuti draf PRD, bisa berubah setelah playtest.",
+    "Sebagian gambar masih Coming soon. Kami bakal kabarin kalau kartunya sudah lengkap.",
   clearSearch: "Hapus pencarian",
   search: "Cari",
   searchPlaceholder: "Nama kartu",
@@ -264,9 +270,9 @@ export const id = {
   rationale: "Dari mainan tradisional",
   artwork: "Gambar",
   stats: "Statistik",
-  packageTitle: "Beli nanti aja. Kenalan dulu.",
+  packageTitle: "Belum ada nih. Coba main dulu saja.",
   packageCopy:
-    "Starter deck sama booster lagi disiapin. Isi dan harganya nunggu final dari tim.",
+    "Starter deck dan Booster Pack sedang disiapin. Isi dan harga siap diperbarui setelah persetujuan tim final.",
   starter: "Starter deck",
   booster: "Booster pack",
   starterCopy: "Paket buat mulai main. Isi kartunya belum diumumkan.",
@@ -277,10 +283,12 @@ export const id = {
   progress: "Status pre-order",
   progressCopy:
     "Belum ada data order atau target yang bisa dipastiin. Angka progres nggak ditampilin.",
-  poTitle: "Pre-order datang.",
+  poTitle: "Pesen Kartu Sekarang",
   poCopy:
-    "Kartu pertamanya lagi dipoles. Nanti kita kabarin di sini kalau pre-order udah buka.",
-  poBadge: "Coming soon",
+    "Form pre-order sudah terbuka. Isi dulu kalau tertarik, kami akan kabari saat kartunya ada.",
+  poBadge: "Form Terbuka",
+  poCta: "Isi form pre-order",
+  igFollow: "@playkastara",
   poFlag: "Coming soon",
   poCardTitle: "Pre-order-nya lagi disiapin.",
   poCardCopy:
@@ -358,7 +366,7 @@ export const en: Dictionary = {
   close: "Close",
   nav: "Main navigation",
   home: "Home",
-  heroEyebrow: "A card game made by Indonesian kids",
+  heroEyebrow: "Indonesia Heritage trading card game",
   heroLine1: "Games you grew up on.",
   heroLine2: "A new way to play.",
   heroCopy:
@@ -370,6 +378,11 @@ export const en: Dictionary = {
   flowTabRules: "Rules",
   flowSimPrompt: "Want to try it before reading everything?",
   flowSimLink: "Play one round here.",
+  simWhereLabel: "Your next move",
+  expStep1: "The table",
+  expStep2: "Try the mechanics",
+  expNext: "Next",
+  expBackMap: "The table",
   ruleGoalTitle: "How to win",
   ruleGoalCopy:
     "Get 3 KOs first. Every rival character that goes down adds 1 to your count.",
@@ -423,9 +436,10 @@ export const en: Dictionary = {
   comingSoon: "Coming soon",
   cardNote: "Note",
   element: "Element",
-  api: "Api",
-  air: "Air",
-  tanah: "Tanah",
+  api: "Fire",
+  air: "Water",
+  wind: "Wind",
+  tanah: "Earth",
   visualNote: "A geometric study, not a final card design.",
   aboutTitle: "From the street to the table.",
   aboutCopy:
@@ -456,9 +470,9 @@ export const en: Dictionary = {
   galleryFiltered: "filtered",
   cardsPageTitle: "Every card.",
   cardsPageCopy:
-    "Cards from the Kastara PRD draft. Open one to see its art, element, stats, and effect.",
+    "Meet the Kastara cards. Open one to see its art, element, stats, and effect.",
   cardsPageFoot:
-    "Some art is still Coming soon. Numbers and rules follow the PRD draft and may change after playtest.",
+    "Some art is still Coming soon. We will let you know when the set is complete.",
   clearSearch: "Clear search",
   search: "Search",
   searchPlaceholder: "Card name",
@@ -615,9 +629,9 @@ export const en: Dictionary = {
   rationale: "From the original toy",
   artwork: "Art",
   stats: "Stats",
-  packageTitle: "Buy later. Get to know it first.",
+  packageTitle: "Not out yet. Try it first.",
   packageCopy:
-    "Starter decks and boosters are in the works. Contents and pricing still need final sign-off.",
+    "Starter deck and Booster Pack are being prepared. Contents and pricing are finalized by the team before launch.",
   starter: "Starter deck",
   booster: "Booster pack",
   starterCopy:
@@ -630,10 +644,12 @@ export const en: Dictionary = {
   progress: "Pre-order status",
   progressCopy:
     "No verified order data or target yet, so no progress numbers are shown.",
-  poTitle: "Pre-order is coming.",
+  poTitle: "Order the Cards Now",
   poCopy:
-    "The first set is still being polished. We will post here when pre-orders open.",
-  poBadge: "Coming soon",
+    "The pre-order form is open. Fill it in when you're ready.",
+  poBadge: "Form Open",
+  poCta: "Open the pre-order form",
+  igFollow: "@playkastara",
   poFlag: "Coming soon",
   poCardTitle: "Kastara pre-order is in the works.",
   poCardCopy:

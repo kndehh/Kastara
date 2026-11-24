@@ -1,7 +1,7 @@
 import {motion} from 'framer-motion'
 import {useEffect,useState} from 'react'
 import {Link,Outlet,useLocation,useNavigate} from 'react-router-dom'
-import {Menu,Layers3,ArrowUpRight} from 'lucide-react'
+import {Menu,ArrowUpRight} from 'lucide-react'
 import {useCopy} from '@/i18n/use-copy'
 import {useUiStore} from '@/stores/ui-store'
 import {scrollToSection,scrollToTop} from '@/lib/utils'
@@ -97,8 +97,8 @@ export function Shell(){
           }}
         >
           <div className="w-[min(1216px,calc(100%_-_96px))] mx-auto max-[1023px]:w-[calc(100%_-_64px)] max-[767px]:w-[calc(100%_-_40px)] h-full grid grid-cols-[1fr_auto_1fr] items-center gap-[24px]">
-            <Link to="/" onClick={goHome} className="[grid-column:1] flex items-center gap-[12px] font-heading text-[11px] leading-[1.5] tracking-[.14em] font-semibold justify-self-start [&>svg]:w-[33px] [&>svg]:h-[33px] [&>svg]:text-[var(--primary)] [&>svg]:[stroke-width:1.2] [&_b]:text-[19px] [&_b]:tracking-[.13em] max-[767px]:gap-[9px]" aria-label="Kastara">
-              <Layers3 aria-hidden="true"/>
+            <Link to="/" onClick={goHome} className="[grid-column:1] flex items-center gap-[12px] font-heading text-[11px] leading-[1.5] tracking-[.14em] font-semibold justify-self-start [&>img]:h-[33px] [&>img]:w-auto [&>img]:object-contain [&_b]:text-[19px] [&_b]:tracking-[.13em] max-[767px]:gap-[9px]" aria-label="Kastara">
+              <img src="/LogoNoBg.png" alt="Kastara" width={33} height={44} loading="eager"/>
               <span>
                 KASTARA
               </span>
@@ -207,11 +207,35 @@ export function Shell(){
         </main>
 
         <footer
-          className="bg-[#0a0b0d] border-t border-[var(--border)] pt-[50px] px-0 pb-[30px] max-[767px]:pt-[30px] max-[767px]:px-0 max-[767px]:pb-[20px]"
+          className="bg-[#0a0b0d] border-t border-[var(--border)] pt-[56px] px-[20px] min-[1024px]:px-[48px] pb-[24px] max-[767px]:pt-[40px]"
         >
-          <div className="w-[min(1216px,calc(100%_-_96px))] mx-auto max-[1023px]:w-[calc(100%_-_64px)] max-[767px]:w-[calc(100%_-_40px)]">
-            <span className="block font-heading text-[13px] tracking-[.16em] font-semibold text-[var(--foreground)]">KASTARA</span>
-            <p className="text-[12px] max-w-[380px] leading-[1.7] mt-[6px]">{t('footer')}</p>
+          <div className="w-[min(1216px,calc(100%_-_96px))] mx-auto flex flex-col items-center text-center">
+            <div className="flex items-center justify-center gap-[12px]">
+              <img
+                src="/LogoNoBg.png"
+                alt=""
+                width={48}
+                height={64}
+                loading="lazy"
+                className="h-[44px] w-auto object-contain"
+              />
+              <div className="text-left">
+                <span className="block font-heading text-[15px] tracking-[.16em] font-semibold text-[var(--foreground)]">KASTARA</span>
+                <span className="block text-[9px] tracking-[.16em] uppercase text-[#85878b] mt-[2px]">Indonesia Heritage</span>
+              </div>
+            </div>
+            <p className="text-[15px] leading-[1.7] max-w-[360px] mt-[24px] text-[#ece9e2]">{t('footer')}</p>
+            <a
+              href="https://www.instagram.com/playkastara/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-[24px] inline-flex items-center gap-[10px] text-[13px] text-[#d2af62] hover:text-[#e8cd8a] transition-colors duration-[.2s]"
+            >
+              <img src="/instagram.svg" alt="" aria-hidden="true" width={18} height={18} loading="lazy"/>
+              {t('igFollow')}
+            </a>
+            <div className="w-full h-px bg-[rgba(210,175,98,0.18)] mt-[44px]" aria-hidden="true"/>
+            <p className="text-[11px] text-[#85878b] mt-[18px]">© 2026 Kastara. All Rights Reserved.</p>
           </div>
         </footer>
       </div>

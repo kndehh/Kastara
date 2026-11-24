@@ -6,43 +6,21 @@ export function clamp(min:number,viewport:number,max:number){
 }
 
 const HEADER_OFFSET=100
-let scrollFrame:number|undefined
 
-function easeInOutCubic(progress:number){
-  return progress<.5?4*progress*progress*progress:1-Math.pow(-2*progress+2,3)/2
+function scrollBehavior():ScrollBehavior{
+  if(typeof window.matchMedia!=="function") return "smooth"
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"
 }
 
-/** Scrolls to a section under the sticky header with a consistent ease-in-out animation. */
+/** Scrolls to a section under the sticky header with smooth scroll. */
 export function scrollToSection(id:string){
   const target=document.getElementById(id)
   if(!target) return
-
-  const start=window.scrollY
-  const destination=Math.max(0,target.getBoundingClientRect().top+start-HEADER_OFFSET)
-  const distance=destination-start
-  if(Math.abs(distance)<1) return
-
-  if(scrollFrame!==undefined) cancelAnimationFrame(scrollFrame)
-
-  const duration=Math.min(800,Math.max(450,Math.abs(distance)*.6))
-  let startedAt:number|undefined
-  const animate=(timestamp:number)=>{
-    startedAt??=timestamp
-    const progress=Math.min((timestamp-startedAt)/duration,1)
-    window.scrollTo({top:start+distance*easeInOutCubic(progress)})
-    if(progress<1) scrollFrame=requestAnimationFrame(animate)
-    else scrollFrame=undefined
-  }
-
-  scrollFrame=requestAnimationFrame(animate)
+  const destination=Math.max(0,target.getBoundingClientRect().top+window.scrollY-HEADER_OFFSET)
+  window.scrollTo({top:destination,behavior:scrollBehavior()})
 }
 
-/** Immediately returns the page to the top and cancels any active section animation. */
+/** Returns the page to the top, smooth unless reduced motion is requested. */
 export function scrollToTop(){
-  if(scrollFrame!==undefined){
-    cancelAnimationFrame(scrollFrame)
-    scrollFrame=undefined
-  }
-  window.scrollTo({top:0})
+  window.scrollTo({top:0,behavior:scrollBehavior()})
 }
-
