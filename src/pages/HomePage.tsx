@@ -80,7 +80,13 @@ function FloatingCardStudy() {
           transition={{ type: "spring", stiffness: 260, damping: 22 }}
         >
           {laras?.art && (
-            <img src={laras.art} alt="" width={659} height={923} loading="lazy"/>
+            <img
+              src={laras.art}
+              alt=""
+              width={659}
+              height={923}
+              loading="lazy"
+            />
           )}
         </motion.div>
         <motion.div
@@ -93,7 +99,13 @@ function FloatingCardStudy() {
           transition={{ type: "spring", stiffness: 260, damping: 22 }}
         >
           {gundu?.art && (
-            <img src={gundu.art} alt="" width={659} height={923} loading="lazy"/>
+            <img
+              src={gundu.art}
+              alt=""
+              width={659}
+              height={923}
+              loading="lazy"
+            />
           )}
         </motion.div>
         <motion.div
@@ -550,7 +562,9 @@ export function HomePage() {
                 }}
               >
                 {pack.key === "booster" ? (
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                  <div
+                    style={{ display: "flex", alignItems: "baseline", gap: 10 }}
+                  >
                     <s
                       style={{
                         fontSize: 12,
@@ -570,9 +584,7 @@ export function HomePage() {
                     >
                       24k
                     </span>
-                    <span
-                      style={{ fontSize: 12, color: "#b5b2a9" }}
-                    >
+                    <span style={{ fontSize: 12, color: "#b5b2a9" }}>
                       (disc 20%)
                     </span>
                   </div>
@@ -592,7 +604,6 @@ export function HomePage() {
             </motion.article>
           ))}
         </motion.div>
-
       </section>
 
       {/* Pre-order */}
@@ -669,7 +680,7 @@ export function HomePage() {
             >
               <iframe
                 title={t("poTitle")}
-                src="https://docs.google.com/forms/d/e/1FAIpQLSe2x8iYXRKyeAekMP943w06yL6B9zfY248JAEnWVj-F6OwVAA/viewform?embedded=true"
+                // src="https://docs.google.com/forms/d/e/1FAIpQLSe2x8iYXRKyeAekMP943w06yL6B9zfY248JAEnWVj-F6OwVAA/viewform?embedded=true"
                 style={{
                   width: "100%",
                   height: 640,
@@ -695,7 +706,7 @@ export function HomePage() {
                 style={{ width: "100%", paddingInline: 22, fontSize: 13 }}
               >
                 <a
-                  href="https://bncc.in/FeedbackKastara"
+                  // href="https://bncc.in/FeedbackKastara"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -878,10 +889,10 @@ function FaqItem({
         aria-expanded={open}
         aria-controls={panelId}
         onClick={(event) => {
-          onToggle()
+          onToggle();
           // Mouse/touch click: drop focus so keyboard scrolling does not paint a
           // focus-visible line on this button. Keyboard activation keeps focus.
-          if (event.detail > 0) event.currentTarget.blur()
+          if (event.detail > 0) event.currentTarget.blur();
         }}
       >
         <span>{t(`q${n}`)}</span>
