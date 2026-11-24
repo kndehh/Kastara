@@ -56,12 +56,11 @@ const RIVAL_ROSTER: readonly Card[] = [
   byId("kst-arka"),
   byId("kst-laras"),
 ];
+/** 5 drawn: 1 becomes Active (Laras), 4 stay in hand. */
 const OPENING_HAND: readonly Card[] = [
   byId("kst-arka"),
   byId("kst-gundu"),
-  byId("kst-egrang"),
   byId("kst-api"),
-  byId("kst-air"),
   byId("kst-air"),
 ];
 
@@ -76,6 +75,8 @@ type Unit = {
   maxHp: number;
   energy: Card[];
   powerups: Card[];
+  /** Turns left on each attached power-up. Expires at the start of your next turn. */
+  powerupTurns: Record<string, number>;
   ward: number;
 };
 
@@ -104,7 +105,44 @@ type SimState = {
 
 function unitFrom(card: Card): Unit {
   const hp = card.hp ?? 70;
-  return { card, hp, maxHp: hp, energy: [], powerups: [], ward: 0 };
+  return {
+    card,
+    hp,
+    maxHp: hp,
+    energy: [],
+    powerups: [],
+    powerupTurns: {},
+    ward: 0,
+  };
+}
+
+/** Power-up effects last 1 turn; Petak Umpet synergy explicitly lasts 2. */
+function powerupDuration(card: Card, synergy: boolean): number {
+  return card.id === "kst-petak-umpet" && synergy ? 2 : 1;
+}
+
+/** Drops effects whose duration ran out when your turn comes back around. */
+function expirePowerups(state: SimState): SimState {
+  if (!state.active || state.active.powerups.length === 0) return state;
+  const expired: Card[] = [];
+  const turns: Record<string, number> = {};
+  for (const card of state.active.powerups) {
+    const left = (state.active.powerupTurns[card.id] ?? 1) - 1;
+    if (left <= 0) expired.push(card);
+    else turns[card.id] = left;
+  }
+  if (expired.length === 0) return state;
+  const wardCleared = expired.some((card) => card.id === "kst-petak-umpet");
+  return {
+    ...state,
+    active: {
+      ...state.active,
+      powerups: state.active.powerups.filter((c) => !expired.includes(c)),
+      powerupTurns: turns,
+      ward: wardCleared ? 0 : state.active.ward,
+    },
+    discard: [...state.discard, ...expired],
+  };
 }
 
 function copies(card: Card, count: number): Card[] {
@@ -150,13 +188,8 @@ function removeFirst(hand: Card[], id: string): Card[] {
 function makeInitialState(): SimState {
   let deck = shuffle(buildDeck());
   for (const id of [
-    "kst-laras",
-    "kst-arka",
-    "kst-gundu",
-    "kst-egrang",
-    "kst-api",
-    "kst-air",
-    "kst-air",
+    "kst-laras", // opening draw: 1 to Active
+    ...OPENING_HAND.map((card) => card.id), // 4 to hand
   ]) {
     deck = takeFirst(deck, id);
   }
@@ -442,6 +475,10 @@ export function TurnSimulator({ bare = false }: { bare?: boolean }) {
           active: {
             ...state.active,
             powerups: [...state.active.powerups, card],
+            powerupTurns: {
+              ...state.active.powerupTurns,
+              [card.id]: powerupDuration(card, synergy),
+            },
             ward,
           },
         },
@@ -558,6 +595,8 @@ export function TurnSimulator({ bare = false }: { bare?: boolean }) {
       }
     }
     if (next.phase === "playing") {
+      // Your turn comes back around: drop 1-turn effects (2-turn ones survive).
+      next = expirePowerups(next);
       next = drawOne(next);
       if (next.phase === "playing") {
         next = applyCongklak(next);

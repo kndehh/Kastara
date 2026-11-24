@@ -23,7 +23,7 @@ it("points the guide and the glow at the same thing", async () => {
   const user = userEvent.setup();
   renderSimulator();
 
-  // Opening hand holds two AIR copies, but only one may glow.
+  // Opening hand: Arka, Gundu, API, AIR. Only the matching AIR may glow.
   const hints = hintedElements();
   expect(hints).toHaveLength(1);
   expect(hints[0]).toHaveAttribute("data-type", "energy");
@@ -38,7 +38,26 @@ it("points the guide and the glow at the same thing", async () => {
 
   const next = await settledHints();
   expect(next[0]).toHaveAttribute("data-type", "power_up");
-  expect(screen.getByRole("status")).toHaveTextContent("Egrang");
+  expect(screen.getByRole("status")).toHaveTextContent("Gundu");
+});
+
+it("drops a one-turn power-up when your turn comes back around", async () => {
+  const user = userEvent.setup();
+  renderSimulator();
+
+  await user.click(hintedElements()[0]); // attach AIR
+  await user.click((await settledHints())[0]); // equip Gundu
+  expect(screen.queryByText("BUANG 1")).not.toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: /Akhiri giliran/ }));
+  // Rival attacks while the effect is live, then it expires into discard.
+  await waitFor(() =>
+    expect(
+      [...document.querySelectorAll("span")].some((el) =>
+        /Buang\s*1/i.test(el.textContent || ""),
+      ),
+    ).toBe(true),
+  );
 });
 
 it("keeps the guide and the glow in sync once the turn moves on", async () => {
@@ -46,7 +65,7 @@ it("keeps the guide and the glow in sync once the turn moves on", async () => {
   renderSimulator();
 
   await user.click(hintedElements()[0]); // attach AIR
-  await user.click((await settledHints())[0]); // equip Egrang
+  await user.click((await settledHints())[0]); // equip Gundu
 
   // Now the strike button is the highlighted target, and the guide says so.
   const hints = await settledHints();
