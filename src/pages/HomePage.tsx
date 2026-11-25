@@ -680,7 +680,7 @@ export function HomePage() {
             >
               <iframe
                 title={t("poTitle")}
-                // src="https://docs.google.com/forms/d/e/1FAIpQLSe2x8iYXRKyeAekMP943w06yL6B9zfY248JAEnWVj-F6OwVAA/viewform?embedded=true"
+                src="https://docs.google.com/forms/d/e/1FAIpQLSe2x8iYXRKyeAekMP943w06yL6B9zfY248JAEnWVj-F6OwVAA/viewform?embedded=true"
                 style={{
                   width: "100%",
                   height: 640,
@@ -706,7 +706,7 @@ export function HomePage() {
                 style={{ width: "100%", paddingInline: 22, fontSize: 13 }}
               >
                 <a
-                  // href="https://bncc.in/FeedbackKastara"
+                  href="https://bncc.in/FeedbackKastara"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
